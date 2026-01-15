@@ -25,6 +25,7 @@ interface RunServerOptions {
   claudeCode: boolean
   showToken: boolean
   proxyEnv: boolean
+  apiKey?: string
 }
 
 export async function runServer(options: RunServerOptions): Promise<void> {
@@ -46,6 +47,7 @@ export async function runServer(options: RunServerOptions): Promise<void> {
   state.rateLimitSeconds = options.rateLimit
   state.rateLimitWait = options.rateLimitWait
   state.showToken = options.showToken
+  state.apiKey = options.apiKey
 
   await ensurePaths()
   await cacheVSCodeVersion()
@@ -184,6 +186,11 @@ export const start = defineCommand({
       default: false,
       description: "Initialize proxy from environment variables",
     },
+    "api-key": {
+      alias: "k",
+      type: "string",
+      description: "API key for Bearer token authentication",
+    },
   },
   run({ args }) {
     const rateLimitRaw = args["rate-limit"]
@@ -202,6 +209,7 @@ export const start = defineCommand({
       claudeCode: args["claude-code"],
       showToken: args["show-token"],
       proxyEnv: args["proxy-env"],
+      apiKey: args["api-key"],
     })
   },
 })
