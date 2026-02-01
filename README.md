@@ -59,7 +59,29 @@ bun install
 
 ## Using with Docker
 
-Build image
+### Using Pre-built Image
+
+You can use the pre-built Docker image from Docker Hub:
+
+```sh
+# Pull the latest image
+docker pull mrlyc/copilot-api:latest
+
+# Run the container
+docker run -p 4141:4141 -v $(pwd)/copilot-data:/root/.local/share/copilot-api mrlyc/copilot-api:latest
+
+# Run with environment variables
+docker run -p 4141:4141 -e GH_TOKEN=your_token -e API_KEY=your_secret_key mrlyc/copilot-api:latest
+```
+
+Available tags:
+- `latest` - Latest build from main branch
+- `v0.7.0` - Specific version
+- `v0.7` - Latest patch of v0.7.x
+- `v0` - Latest minor/patch of v0.x.x
+- `<commit-sha>` - Specific commit
+
+### Building from Source
 
 ```sh
 docker build -t copilot-api .
@@ -91,6 +113,9 @@ docker build --build-arg GH_TOKEN=your_github_token_here -t copilot-api .
 # Run with GitHub token
 docker run -p 4141:4141 -e GH_TOKEN=your_github_token_here copilot-api
 
+# Run with API key for authentication (requires Bearer token in requests)
+docker run -p 4141:4141 -e GH_TOKEN=your_token -e API_KEY=your_secret_key copilot-api
+
 # Run with additional options
 docker run -p 4141:4141 -e GH_TOKEN=your_token copilot-api start --verbose --port 4141
 ```
@@ -106,6 +131,7 @@ services:
       - "4141:4141"
     environment:
       - GH_TOKEN=your_github_token_here
+      - API_KEY=your_secret_api_key  # Optional: enables Bearer token authentication
     restart: unless-stopped
 ```
 
@@ -163,6 +189,7 @@ The following command line options are available for the `start` command:
 | --claude-code  | Generate a command to launch Claude Code with Copilot API config              | false      | -c    |
 | --show-token   | Show GitHub and Copilot tokens on fetch and refresh                           | false      | none  |
 | --proxy-env    | Initialize proxy from environment variables                                   | false      | none  |
+| --api-key      | API key for Bearer token authentication                                        | none       | -k    |
 
 ### Auth Command Options
 
@@ -255,6 +282,28 @@ npx copilot-api@latest debug --json
 
 # Initialize proxy from environment variables (HTTP_PROXY, HTTPS_PROXY, etc.)
 npx copilot-api@latest start --proxy-env
+
+# Enable API key authentication (clients must send Bearer token)
+npx copilot-api@latest start --api-key your_secret_key
+```
+
+## API Key Authentication
+
+You can secure your Copilot API proxy with Bearer token authentication using the `--api-key` option (or `API_KEY` environment variable in Docker).
+
+When enabled, all API requests must include an `Authorization` header:
+
+```
+Authorization: Bearer your_secret_key
+```
+
+Example with curl:
+
+```sh
+curl -X POST http://localhost:4141/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your_secret_key" \
+  -d '{"model": "gpt-4.1", "messages": [{"role": "user", "content": "Hello"}]}'
 ```
 
 ## Using the Usage Viewer

@@ -7,17 +7,16 @@ name: Docker Build and Push
 
 on:
   push:
-    # branches: [ "main" ]
-    # Publish semver tags as releases.
+    branches: [ "main" ]
     tags: [ 'v*.*.*' ]
     paths-ignore:
       - 'docs/**'
+      - '*.md'
+      - 'pages/**'
 
 env:
-  # Use docker.io for Docker Hub if empty
-  REGISTRY: ghcr.io
-  # github.repository as <account>/<repo>
-  #IMAGE_NAME: ${{ github.repository }}
+  REGISTRY: docker.io
+  IMAGE_NAME: mrlyc/copilot-api
 
 
 jobs:
@@ -56,13 +55,13 @@ jobs:
 
       # Login against a Docker registry except on PR
       # https://github.com/docker/login-action
-      - name: Log into registry ${{ env.REGISTRY }}
+      - name: Log into Docker Hub
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v2
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # Extract metadata (tags, labels) for Docker
       # https://github.com/docker/metadata-action
@@ -71,11 +70,13 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          images: ${{ env.REGISTRY }}/${{ github.repository }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
             type=semver,pattern=v{{version}}
             type=semver,pattern=v{{major}}.{{minor}}
             type=semver,pattern=v{{major}}
+            type=sha,prefix=
 
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
