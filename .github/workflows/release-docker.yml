@@ -7,7 +7,7 @@ name: Docker Build and Push
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
     tags: [ 'v*.*.*' ]
     paths-ignore:
       - 'docs/**'
